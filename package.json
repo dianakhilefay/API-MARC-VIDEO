@@ -1,7 +1,7 @@
 {
   "name": "api-marc-video",
-  "version": "2.0.0", 
-  "description": "Video API for adult platforms",
+  "version": "2.0.0",
+  "description": "Video API for adult platforms with download support",
   "main": "api-video.js",
   "scripts": {
     "start": "node api-video.js"
