@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Test Lecteur Vidéo API-MARC</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .api-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 20px;
+            border-radius: 25px;
+            margin-top: 15px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #28a745;
+            animation: pulse 2s infinite;
+        }
+
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .video-container {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        video {
+            width: 100%;
+            max-width: 800px;
+            height: auto;
+            border-radius: 8px;
+            background: #000;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+
+        .result {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .video-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .error {
+            background: rgba(220, 53, 69, 0.2);
+            border: 1px solid #dc3545;
+            color: #ff6b6b;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .success {
+            background: rgba(40, 167, 69, 0.2);
+            border: 1px solid #28a745;
+            color: #90EE90;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1> Test Lecteur Vidéo API-MARC</h1>
+            <p>Vérification complète des vidéos et du CORS</p>
+            <div class="api-status">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Vérification...</span>
+                <span id="responseTime" style="margin-left: 20px;">--ms</span>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3> Test des Vidéos en Direct</h3>
+            <div class="controls">
+                <button class="btn btn-primary" onclick="testRandomVideo()">
+                     Vidéo Aléatoire
+                </button>
+                <button class="btn btn-success" onclick="testSearchVideo()">
+                     Recherche + Lecture
+                </button>
+                <button class="btn btn-warning" onclick="testStreamVideo()">
+                     Stream Direct
+                </button>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Chargement de la vidéo...</p>
+            </div>
+
+            <div class="video-container" id="videoContainer" style="display: none;">
+                <video id="videoPlayer" controls>
+                    <source id="videoSource" src="" type="video/mp4">
+                    Votre navigateur ne supporte pas la lecture vidéo.
+                </video>
+                <div class="video-info" id="videoInfo"></div>
+            </div>
+
+            <div class="result" id="jsonResult" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3> Test CORS Cross-Domain</h3>
+            <p>Cette page teste si l''API fonctionne depuis n''importe quel domaine.</p>
+            <div class="controls">
+                <button class="btn btn-primary" onclick="testCors()">
+                     Test CORS
+                </button>
+            </div>
+            <div id="corsResult"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "https://web-production-7115f.up.railway.app";
+        let currentVideoData = null;
+
+        // Vérifier le status de l''API
+        async function checkApiStatus() {
+            const start = Date.now();
+            try {
+                const response = await fetch(API_BASE + "/health");
+                const data = await response.json();
+                const responseTime = Date.now() - start;
+                
+                const statusDot = document.getElementById("statusDot");
+                const statusText = document.getElementById("statusText");
+                const responseTimeEl = document.getElementById("responseTime");
+                
+                if (data.status === "healthy") {
+                    statusDot.style.background = "#28a745";
+                    statusText.textContent = "API Online ";
+                } else {
+                    statusDot.style.background = "#ffc107";
+                    statusText.textContent = "API Issues ";
+                }
+                
+                responseTimeEl.textContent = responseTime + "ms";
+                
+                // Test la version
+                if (data.version === "3.0.0") {
+                    showMessage(" API v3.0.0 détectée - CORS et vidéos corrigés!", "success");
+                }
+                
+            } catch (error) {
+                const statusDot = document.getElementById("statusDot");
+                const statusText = document.getElementById("statusText");
+                
+                statusDot.style.background = "#dc3545";
+                statusText.textContent = "API Offline ";
+                document.getElementById("responseTime").textContent = "Error";
+                
+                showMessage(" Impossible de contacter l''API", "error");
+            }
+        }
+
+        // Afficher un message
+        function showMessage(message, type) {
+            const div = document.createElement("div");
+            div.className = type;
+            div.textContent = message;
+            document.querySelector(".container").appendChild(div);
+            
+            setTimeout(() => div.remove(), 5000);
+        }
+
+        // Afficher/Masquer le loading
+        function showLoading(show) {
+            document.getElementById("loading").classList.toggle("show", show);
+        }
+
+        // Afficher les résultats JSON
+        function showJson(data) {
+            const result = document.getElementById("jsonResult");
+            result.style.display = "block";
+            result.textContent = JSON.stringify(data, null, 2);
+        }
+
+        // Afficher la vidéo
+        function showVideo(videoData) {
+            currentVideoData = videoData;
+            
+            const container = document.getElementById("videoContainer");
+            const player = document.getElementById("videoPlayer");
+            const source = document.getElementById("videoSource");
+            const info = document.getElementById("videoInfo");
+            
+            // Utiliser l''URL vidéo directe
+            const videoUrl = videoData.videoUrl || videoData.streamingUrls[''720p''] || videoData.downloadUrl;
+            
+            if (videoUrl) {
+                source.src = videoUrl;
+                player.load();
+                
+                container.style.display = "block";
+                
+                info.innerHTML = `
+                    <h4>${videoData.title || ''Vidéo Test''}</h4>
+                    <p><strong>ID:</strong> ${videoData.id}</p>
+                    <p><strong>Plateforme:</strong> ${videoData.platform || ''N/A''}</p>
+                    <p><strong>Durée:</strong> ${videoData.duration || ''N/A''}</p>
+                    <p><strong>URL Vidéo:</strong> <a href="${videoUrl}" target="_blank" style="color: #90EE90;">${videoUrl}</a></p>
+                    <p><strong>Qualités disponibles:</strong> ${Object.keys(videoData.streamingUrls || {}).join('', '')}</p>
+                `;
+                
+                // Tenter de jouer automatiquement
+                player.play().then(() => {
+                    showMessage(" Vidéo chargée et lecture démarrée!", "success");
+                }).catch(err => {
+                    showMessage(" Vidéo chargée, cliquez sur play pour démarrer", "success");
+                });
+                
+            } else {
+                showMessage(" Aucune URL vidéo trouvée", "error");
+            }
+        }
+
+        // Test vidéo aléatoire
+        async function testRandomVideo() {
+            showLoading(true);
+            try {
+                const response = await fetch(API_BASE + "/api/xnxx/random");
+                const data = await response.json();
+                
+                showJson(data);
+                
+                if (data.success && data.data) {
+                    showVideo(data.data);
+                    showMessage(" Vidéo aléatoire chargée!", "success");
+                } else {
+                    showMessage(" Erreur dans les données de la vidéo", "error");
+                }
+                
+            } catch (error) {
+                showMessage(" Erreur CORS ou réseau: " + error.message, "error");
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Test recherche et lecture
+        async function testSearchVideo() {
+            showLoading(true);
+            try {
+                const response = await fetch(API_BASE + "/api/pornhub/search?q=test&limit=1");
+                const data = await response.json();
+                
+                showJson(data);
+                
+                if (data.success && data.data && data.data.length > 0) {
+                    showVideo(data.data[0]);
+                    showMessage(" Vidéo de recherche chargée!", "success");
+                } else {
+                    showMessage(" Aucun résultat de recherche", "error");
+                }
+                
+            } catch (error) {
+                showMessage(" Erreur CORS ou réseau: " + error.message, "error");
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Test stream direct
+        async function testStreamVideo() {
+            showLoading(true);
+            try {
+                const response = await fetch(API_BASE + "/api/xvideos/stream/test123");
+                const data = await response.json();
+                
+                showJson(data);
+                
+                if (data.success && data.data) {
+                    showVideo(data.data);
+                    showMessage(" Stream direct chargé!", "success");
+                } else {
+                    showMessage(" Erreur dans les données du stream", "error");
+                }
+                
+            } catch (error) {
+                showMessage(" Erreur CORS ou réseau: " + error.message, "error");
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Test CORS
+        async function testCors() {
+            const corsResult = document.getElementById("corsResult");
+            corsResult.innerHTML = "<p> Test CORS en cours...</p>";
+            
+            try {
+                // Test 1: Simple GET
+                const response1 = await fetch(API_BASE + "/health");
+                const data1 = await response1.json();
+                
+                // Test 2: GET avec paramètres
+                const response2 = await fetch(API_BASE + "/api/xnxx/random");
+                const data2 = await response2.json();
+                
+                // Test 3: Vérifier les headers CORS
+                const corsHeaders = {
+                    ''Access-Control-Allow-Origin'': response1.headers.get(''Access-Control-Allow-Origin''),
+                    ''Access-Control-Allow-Methods'': response1.headers.get(''Access-Control-Allow-Methods''),
+                    ''Access-Control-Allow-Headers'': response1.headers.get(''Access-Control-Allow-Headers'')
+                };
+                
+                corsResult.innerHTML = `
+                    <div class="success">
+                        <h4> Test CORS Réussi!</h4>
+                        <p><strong>Health Check:</strong> ${data1.status}</p>
+                        <p><strong>Random Video:</strong> ${data2.success ? ''Succès'' : ''Échec''}</p>
+                        <p><strong>CORS Origin:</strong> ${corsHeaders[''Access-Control-Allow-Origin''] || ''Configuré côté serveur''}</p>
+                        <p><strong>Domaine actuel:</strong> ${window.location.origin}</p>
+                        <p> L''API est utilisable depuis n''importe quel domaine!</p>
+                    </div>
+                `;
+                
+            } catch (error) {
+                corsResult.innerHTML = `
+                    <div class="error">
+                        <h4> Test CORS Échoué</h4>
+                        <p><strong>Erreur:</strong> ${error.message}</p>
+                        <p>L''API n''est pas accessible depuis ce domaine.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Initialiser au chargement
+        document.addEventListener("DOMContentLoaded", function() {
+            checkApiStatus();
+            
+            // Vérifier le status toutes les 30 secondes
+            setInterval(checkApiStatus, 30000);
+        });
+    </script>
+</body>
+</html>
