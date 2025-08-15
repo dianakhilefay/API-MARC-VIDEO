@@ -1,0 +1,471 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API-MARC - Testeur Web</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .status-bar {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: white;
+        }
+        
+        .api-url {
+            font-family: 'Courier New', monospace;
+            background: rgba(0,0,0,0.2);
+            padding: 8px 12px;
+            border-radius: 8px;
+            display: inline-block;
+            margin: 5px;
+        }
+        
+        .test-section {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        .test-section h2 {
+            color: #4a5568;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .endpoint-grid {
+            display: grid;
+            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+        
+        .endpoint-card {
+            background: linear-gradient(145deg, #f7fafc, #edf2f7);
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .endpoint-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-color: #4299e1;
+        }
+        
+        .endpoint-title {
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+        
+        .endpoint-url {
+            font-family: 'Courier New', monospace;
+            background: #f7fafc;
+            padding: 8px;
+            border-radius: 6px;
+            margin: 8px 0;
+            font-size: 0.9rem;
+            word-break: break-all;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .test-button {
+            background: linear-gradient(45deg, #4299e1, #3182ce);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .test-button:hover {
+            background: linear-gradient(45deg, #3182ce, #2c5282);
+            transform: translateY(-1px);
+        }
+        
+        .test-button:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .search-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+        
+        .results-section {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+        
+        .result-item {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .status-success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .status-error {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+        
+        .result-data {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #4a5568;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4299e1;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .search-form {
+                flex-direction: column;
+            }
+            
+            .search-input {
+                min-width: 100%;
+            }
+            
+            .endpoint-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .emoji {
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1> API-MARC Testeur</h1>
+            <p>Interface de test pour votre API locale</p>
+        </div>
+        
+        <div class="status-bar">
+            <div> API URL: <span class="api-url" id="apiUrl">http://localhost:3000</span></div>
+            <div> Status: <span id="apiStatus">En attente...</span></div>
+        </div>
+        
+        <div class="test-section">
+            <h2><span class="emoji"></span> Endpoints de Base</h2>
+            <div class="endpoint-grid">
+                <div class="endpoint-card">
+                    <div class="endpoint-title"> Documentation</div>
+                    <div class="endpoint-url">GET /</div>
+                    <button class="test-button" onclick="testEndpoint('/')">Tester</button>
+                </div>
+                
+                <div class="endpoint-card">
+                    <div class="endpoint-title"> Status</div>
+                    <div class="endpoint-url">GET /status</div>
+                    <button class="test-button" onclick="testEndpoint('/status')">Tester</button>
+                </div>
+                
+                <div class="endpoint-card">
+                    <div class="endpoint-title"> Health Check</div>
+                    <div class="endpoint-url">GET /health</div>
+                    <button class="test-button" onclick="testEndpoint('/health')">Tester</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2><span class="emoji"></span> Endpoints Aléatoires</h2>
+            <div class="endpoint-grid">
+                <div class="endpoint-card">
+                    <div class="endpoint-title"> XNXX Random</div>
+                    <div class="endpoint-url">GET /xnxx/random</div>
+                    <button class="test-button" onclick="testEndpoint('/xnxx/random')">Tester</button>
+                </div>
+                
+                <div class="endpoint-card">
+                    <div class="endpoint-title"> PornHub Random</div>
+                    <div class="endpoint-url">GET /pornhub/random</div>
+                    <button class="test-button" onclick="testEndpoint('/pornhub/random')">Tester</button>
+                </div>
+                
+                <div class="endpoint-card">
+                    <div class="endpoint-title"> XVideos Random</div>
+                    <div class="endpoint-url">GET /xvideos/random</div>
+                    <button class="test-button" onclick="testEndpoint('/xvideos/random')">Tester</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2><span class="emoji"></span> Recherche</h2>
+            
+            <h3> XNXX Search</h3>
+            <div class="search-form">
+                <input type="text" class="search-input" id="xnxxSearch" placeholder="Terme de recherche..." value="test">
+                <input type="number" class="search-input" id="xnxxPage" placeholder="Page (0)" value="0" style="flex: 0 0 80px;">
+                <button class="test-button" onclick="testSearch('xnxx')" style="flex: 0 0 120px;">Rechercher</button>
+            </div>
+            
+            <h3> PornHub Search</h3>
+            <div class="search-form">
+                <input type="text" class="search-input" id="pornhubSearch" placeholder="Terme de recherche..." value="sample">
+                <input type="number" class="search-input" id="pornhubPage" placeholder="Page (0)" value="0" style="flex: 0 0 80px;">
+                <button class="test-button" onclick="testSearch('pornhub')" style="flex: 0 0 120px;">Rechercher</button>
+            </div>
+        </div>
+        
+        <div class="results-section">
+            <h2><span class="emoji"></span> Résultats des Tests</h2>
+            <div id="results">
+                <div class="loading">
+                    <p> Cliquez sur un bouton "Tester" pour voir les résultats ici</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+        let testCounter = 0;
+        
+        // Vérifier le status de l'API au chargement
+        window.onload = function() {
+            checkAPIStatus();
+        };
+        
+        async function checkAPIStatus() {
+            const statusElement = document.getElementById('apiStatus');
+            try {
+                const response = await fetch(${API_BASE}/health);
+                if (response.ok) {
+                    statusElement.innerHTML = ' En ligne';
+                    statusElement.style.color = '#22543d';
+                } else {
+                    statusElement.innerHTML = ' Problème de connexion';
+                    statusElement.style.color = '#d69e2e';
+                }
+            } catch (error) {
+                statusElement.innerHTML = ' Hors ligne';
+                statusElement.style.color = '#e53e3e';
+            }
+        }
+        
+        async function testEndpoint(endpoint) {
+            const resultsDiv = document.getElementById('results');
+            testCounter++;
+            
+            // Créer l'élément de résultat
+            const resultItem = document.createElement('div');
+            resultItem.className = 'result-item';
+            resultItem.id = esult-;
+            
+            resultItem.innerHTML = 
+                <div class="result-header">
+                    <span><strong>Test #:</strong> </span>
+                    <span class="status-badge" id="status-"> En cours...</span>
+                </div>
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Requête en cours...</p>
+                </div>
+            ;
+            
+            // Ajouter en haut de la liste
+            if (resultsDiv.firstChild) {
+                resultsDiv.insertBefore(resultItem, resultsDiv.firstChild);
+            } else {
+                resultsDiv.appendChild(resultItem);
+            }
+            
+            try {
+                const startTime = Date.now();
+                const response = await fetch(${API_BASE});
+                const endTime = Date.now();
+                const responseTime = endTime - startTime;
+                
+                const data = await response.json();
+                
+                const statusBadge = document.getElementById(status-);
+                const resultContent = document.getElementById(esult-);
+                
+                if (response.ok) {
+                    statusBadge.textContent =   (ms);
+                    statusBadge.className = 'status-badge status-success';
+                } else {
+                    statusBadge.textContent =   (ms);
+                    statusBadge.className = 'status-badge status-error';
+                }
+                
+                resultContent.innerHTML = 
+                    <div class="result-header">
+                        <span><strong>Test #:</strong> </span>
+                        <span class="status-badge ">
+                              (ms)
+                        </span>
+                    </div>
+                    <div class="result-data"></div>
+                ;
+                
+            } catch (error) {
+                const statusBadge = document.getElementById(status-);
+                const resultContent = document.getElementById(esult-);
+                
+                statusBadge.textContent = ' Erreur';
+                statusBadge.className = 'status-badge status-error';
+                
+                resultContent.innerHTML = 
+                    <div class="result-header">
+                        <span><strong>Test #:</strong> </span>
+                        <span class="status-badge status-error"> Erreur</span>
+                    </div>
+                    <div class="result-data">Erreur: </div>
+                ;
+            }
+        }
+        
+        async function testSearch(site) {
+            const searchInput = document.getElementById(${site}Search);
+            const pageInput = document.getElementById(${site}Page);
+            
+            const key = searchInput.value.trim();
+            const page = pageInput.value || 0;
+            
+            if (!key) {
+                alert('Veuillez entrer un terme de recherche');
+                return;
+            }
+            
+            const endpoint = //search?key=&page=;
+            await testEndpoint(endpoint);
+        }
+        
+        // Actualiser le status toutes les 30 secondes
+        setInterval(checkAPIStatus, 30000);
+    </script>
+</body>
+</html>

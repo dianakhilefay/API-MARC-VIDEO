@@ -1,0 +1,27 @@
+{
+  "name": "api-marc-video-railway",
+  "version": "2.0.0",
+  "description": "API de scraping pour plateformes adultes avec téléchargement vidéo - by dianakhilefay",
+  "main": "api-video.js",
+  "scripts": {
+    "start": "node api-video.js",
+    "dev": "node api-video.js",
+    "railway-start": "node api-video.js"
+  },
+  "dependencies": {
+    "express": "^4.18.0",
+    "cors": "^2.8.5",
+    "axios": "^1.6.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["api", "video", "download", "streaming", "adult", "railway"],
+  "author": "dianakhilefay",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dianakhilefay/API-MARC-VIDEO.git"
+  },
+  "homepage": "https://github.com/dianakhilefay/API-MARC-VIDEO"
+}
