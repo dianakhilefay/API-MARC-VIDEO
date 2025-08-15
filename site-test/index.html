@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> API-MARC Tester - dianakhilefay</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .api-url {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: "Courier New", monospace;
+            font-size: 1.1em;
+        }
+        
+        .platforms {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .platform-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .platform-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .platform-name {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #ff6b6b;
+            text-transform: uppercase;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+        
+        .btn-random { background: linear-gradient(45deg, #ff6b6b, #ee5a52); color: white; }
+        .btn-stream { background: linear-gradient(45deg, #4ecdc4, #44a08d); color: white; }
+        .btn-download { background: linear-gradient(45deg, #f093fb, #f5576c); color: white; }
+        .btn-search { background: linear-gradient(45deg, #4facfe, #00f2fe); color: white; }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .input-section {
+            margin-bottom: 15px;
+        }
+        
+        .input-label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+            color: #a8e6cf;
+        }
+        
+        .custom-input {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 25px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 1em;
+        }
+        
+        .result-container {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .result-json {
+            font-family: "Courier New", monospace;
+            font-size: 0.85em;
+            white-space: pre-wrap;
+            color: #a8e6cf;
+        }
+        
+        .search-results {
+            margin-top: 15px;
+        }
+        
+        .search-result-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border-left: 4px solid #4ecdc4;
+        }
+        
+        .search-result-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #4ecdc4;
+        }
+        
+        .search-result-meta {
+            font-size: 0.9em;
+            color: #a8e6cf;
+            margin-bottom: 10px;
+        }
+        
+        .search-result-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .mini-btn {
+            padding: 5px 15px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.8em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .mini-btn-stream {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+        }
+        
+        .mini-btn-download {
+            background: linear-gradient(45deg, #f093fb, #f5576c);
+            color: white;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .loading.show { display: block; }
+        
+        .spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .video-player {
+            margin-top: 15px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .video-player video {
+            width: 100%;
+            border-radius: 10px;
+        }
+        
+        .status-bar {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4ecdc4;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .download-section {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .download-section.show {
+            display: block;
+        }
+        
+        .download-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .download-btn {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .download-progress {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        .download-progress-bar {
+            height: 100%;
+            background: linear-gradient(45deg, #28a745, #20c997);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1> API-MARC Tester</h1>
+            <p>Testeur complet avec recherche et téléchargement personnalisé</p>
+            <div class="api-url">
+                 API Base: <span id="apiUrl">https://web-production-7115f.up.railway.app</span>
+                <button onclick="changeApiUrl()" style="margin-left: 10px; padding: 5px 10px; background: #4ecdc4; border: none; border-radius: 5px; color: white; cursor: pointer;">
+                     Changer
+                </button>
+            </div>
+            <div class="status-bar">
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span>API Status: <span id="apiStatus">Checking...</span></span>
+                </div>
+                <div style="font-family: Courier New; color: #a8e6cf;">
+                    Response: <span id="responseTime">--</span>ms
+                </div>
+            </div>
+        </div>
+        
+        <div class="platforms" id="platformsContainer">
+            <!-- Plateformes générées par JS -->
+        </div>
+    </div>
+
+    <script>
+        const platforms = ["xnxx", "pornhub", "xvideos", "redtube", "xhamster", "youporn"];
+        
+        function changeApiUrl() {
+            const newUrl = prompt("Entrer la nouvelle URL de l'\''API:", document.getElementById("apiUrl").textContent);
+            if (newUrl) {
+                document.getElementById("apiUrl").textContent = newUrl;
+                checkApiStatus();
+            }
+        }
+        
+        async function checkApiStatus() {
+            const start = Date.now();
+            try {
+                const response = await fetch(document.getElementById("apiUrl").textContent + "/health");
+                const data = await response.json();
+                const responseTime = Date.now() - start;
+                
+                document.getElementById("apiStatus").textContent = data.status === "healthy" ? "Online " : "Offline ";
+                document.getElementById("responseTime").textContent = responseTime;
+            } catch (error) {
+                document.getElementById("apiStatus").textContent = "Offline ";
+                document.getElementById("responseTime").textContent = "Error";
+            }
+        }
+        
+        function createPlatformCard(platform) {
+            return `
+                <div class="platform-card">
+                    <div class="platform-name">
+                         ${platform.toUpperCase()}
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="btn btn-random" onclick="testRandom('\''${platform}'\'')">
+                             Random
+                        </button>
+                        <button class="btn btn-stream" onclick="testStreamCustom('\''${platform}'\'')">
+                             Stream
+                        </button>
+                        <button class="btn btn-download" onclick="testDownloadCustom('\''${platform}'\'')">
+                             Download
+                        </button>
+                    </div>
+                    
+                    <div class="input-section">
+                        <label class="input-label"> Rechercher des vidéos:</label>
+                        <input type="text" class="custom-input" id="search-${platform}" placeholder="Ex: amateur, couple, etc...">
+                        <button class="btn btn-search" onclick="testSearch('\''${platform}'\'')" style="width: 100%;">
+                             Rechercher
+                        </button>
+                    </div>
+                    
+                    <div class="input-section">
+                        <label class="input-label"> Nom/ID de vidéo personnalisé:</label>
+                        <input type="text" class="custom-input" id="custom-video-${platform}" placeholder="Ex: ma_video_favorite, video123, etc...">
+                    </div>
+                    
+                    <div class="loading" id="loading-${platform}">
+                        <div class="spinner"></div>
+                        <p>Chargement...</p>
+                    </div>
+                    
+                    <div class="result-container" id="result-${platform}" style="display: none;">
+                        <pre class="result-json" id="json-${platform}"></pre>
+                    </div>
+                    
+                    <div class="search-results" id="search-results-${platform}" style="display: none;">
+                        <!-- Résultats de recherche -->
+                    </div>
+                    
+                    <div class="download-section" id="download-${platform}">
+                        <div class="download-info">
+                            <span id="download-filename-${platform}">video.mp4</span>
+                            <span id="download-size-${platform}">0 MB</span>
+                        </div>
+                        <div class="download-progress">
+                            <div class="download-progress-bar" id="progress-bar-${platform}"></div>
+                        </div>
+                        <button class="download-btn" id="download-btn-${platform}" onclick="startRealDownload('\''${platform}'\'')">
+                             Télécharger la Vidéo
+                        </button>
+                    </div>
+                    
+                    <div class="video-player" id="video-${platform}" style="display: none;">
+                    </div>
+                </div>
+            `;
+        }
+        
+        function initializePlatforms() {
+            const container = document.getElementById("platformsContainer");
+            container.innerHTML = platforms.map(createPlatformCard).join("");
+        }
+        
+        function showLoading(platform) {
+            document.getElementById(`loading-${platform}`).classList.add("show");
+            document.getElementById(`result-${platform}`).style.display = "none";
+            document.getElementById(`search-results-${platform}`).style.display = "none";
+            document.getElementById(`video-${platform}`).style.display = "none";
+            document.getElementById(`download-${platform}`).classList.remove("show");
+        }
+        
+        function hideLoading(platform) {
+            document.getElementById(`loading-${platform}`).classList.remove("show");
+        }
+        
+        function showResult(platform, data) {
+            hideLoading(platform);
+            document.getElementById(`result-${platform}`).style.display = "block";
+            document.getElementById(`json-${platform}`).textContent = JSON.stringify(data, null, 2);
+        }
+        
+        async function makeApiCall(endpoint, platform) {
+            const apiUrl = document.getElementById("apiUrl").textContent;
+            showLoading(platform);
+            
+            try {
+                const response = await fetch(apiUrl + endpoint);
+                const data = await response.json();
+                showResult(platform, data);
+                return data;
+            } catch (error) {
+                hideLoading(platform);
+                showResult(platform, { error: error.message });
+                return null;
+            }
+        }
+        
+        async function testRandom(platform) {
+            await makeApiCall(`/api/${platform}/random`, platform);
+        }
+        
+        async function testStreamCustom(platform) {
+            const customVideo = document.getElementById(`custom-video-${platform}`).value;
+            const videoId = customVideo || `stream_test_${Date.now()}`;
+            
+            const data = await makeApiCall(`/api/${platform}/stream/${videoId}`, platform);
+            
+            if (data && data.success && data.data.streamingUrls) {
+                const videoContainer = document.getElementById(`video-${platform}`);
+                videoContainer.style.display = "block";
+                videoContainer.innerHTML = `
+                    <div style="text-align: center; margin-bottom: 10px;">
+                        <h4> ${data.data.title}</h4>
+                    </div>
+                    <video controls>
+                        <source src="${data.data.streamingUrls["720p"]}" type="video/mp4">
+                        Votre navigateur ne supporte pas la vidéo HTML5.
+                    </video>
+                `;
+            }
+        }
+        
+        async function testDownloadCustom(platform) {
+            const customVideo = document.getElementById(`custom-video-${platform}`).value;
+            const videoId = customVideo || `download_test_${Date.now()}`;
+            
+            const data = await makeApiCall(`/api/${platform}/download/${videoId}`, platform);
+            
+            if (data && data.success) {
+                const downloadSection = document.getElementById(`download-${platform}`);
+                downloadSection.classList.add("show");
+                
+                document.getElementById(`download-filename-${platform}`).textContent = data.filename;
+                document.getElementById(`download-size-${platform}`).textContent = Math.round(data.size / 1024 / 1024) + " MB";
+                
+                simulateDownloadProgress(platform);
+            }
+        }
+        
+        async function testSearch(platform) {
+            const query = document.getElementById(`search-${platform}`).value;
+            if (!query) {
+                alert("Veuillez entrer un terme de recherche");
+                return;
+            }
+            
+            const data = await makeApiCall(`/api/${platform}/search?q=${encodeURIComponent(query)}&limit=5`, platform);
+            
+            if (data && data.success && data.data) {
+                showSearchResults(platform, data);
+            }
+        }
+        
+        function showSearchResults(platform, data) {
+            const resultsContainer = document.getElementById(`search-results-${platform}`);
+            resultsContainer.style.display = "block";
+            
+            let resultsHtml = `<h4> Résultats pour "${data.query}" (${data.totalResults})</h4>`;
+            
+            data.data.forEach((video, index) => {
+                resultsHtml += `
+                    <div class="search-result-item">
+                        <div class="search-result-title">${video.title}</div>
+                        <div class="search-result-meta">
+                             ${video.duration} |  ${video.rating} |  ${video.views.toLocaleString()} vues
+                        </div>
+                        <div class="search-result-actions">
+                            <button class="mini-btn mini-btn-stream" onclick="streamVideo('\''${platform}'\'', '\''${video.id}'\'')">
+                                 Stream
+                            </button>
+                            <button class="mini-btn mini-btn-download" onclick="downloadVideo('\''${platform}'\'', '\''${video.id}'\'')">
+                                 Download
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            resultsContainer.innerHTML = resultsHtml;
+        }
+        
+        async function streamVideo(platform, videoId) {
+            const data = await makeApiCall(`/api/${platform}/stream/${videoId}`, platform);
+            
+            if (data && data.success && data.data.streamingUrls) {
+                const videoContainer = document.getElementById(`video-${platform}`);
+                videoContainer.style.display = "block";
+                videoContainer.innerHTML = `
+                    <div style="text-align: center; margin-bottom: 10px;">
+                        <h4> ${data.data.title}</h4>
+                    </div>
+                    <video controls>
+                        <source src="${data.data.streamingUrls["720p"]}" type="video/mp4">
+                        Votre navigateur ne supporte pas la vidéo HTML5.
+                    </video>
+                `;
+            }
+        }
+        
+        async function downloadVideo(platform, videoId) {
+            const data = await makeApiCall(`/api/${platform}/download/${videoId}`, platform);
+            
+            if (data && data.success) {
+                const downloadSection = document.getElementById(`download-${platform}`);
+                downloadSection.classList.add("show");
+                
+                document.getElementById(`download-filename-${platform}`).textContent = data.filename;
+                document.getElementById(`download-size-${platform}`).textContent = Math.round(data.size / 1024 / 1024) + " MB";
+                
+                simulateDownloadProgress(platform);
+            }
+        }
+        
+        function simulateDownloadProgress(platform) {
+            const progressBar = document.getElementById(`progress-bar-${platform}`);
+            const downloadBtn = document.getElementById(`download-btn-${platform}`);
+            
+            let progress = 0;
+            downloadBtn.textContent = " Téléchargement...";
+            downloadBtn.disabled = true;
+            
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    downloadBtn.textContent = " Téléchargement Terminé!";
+                    downloadBtn.disabled = false;
+                    
+                    setTimeout(() => {
+                        showVideoPreview(platform);
+                    }, 500);
+                }
+                progressBar.style.width = progress + "%";
+            }, 200);
+        }
+        
+        function showVideoPreview(platform) {
+            const videoContainer = document.getElementById(`video-${platform}`);
+            videoContainer.style.display = "block";
+            videoContainer.innerHTML = `
+                <div style="text-align: center;">
+                    <h4> Vidéo Téléchargée</h4>
+                    <video controls style="width: 100%; max-width: 400px;">
+                        <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+                        Votre navigateur ne supporte pas la vidéo HTML5.
+                    </video>
+                    <p style="margin-top: 10px; color: #a8e6cf;"> Vidéo prête à regarder!</p>
+                </div>
+            `;
+        }
+        
+        async function startRealDownload(platform) {
+            const link = document.createElement("a");
+            link.href = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+            link.download = `${platform}_video_${Date.now()}.mp4`;
+            link.style.display = "none";
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            alert(` Téléchargement commencé!\nFichier: ${link.download}`);
+        }
+        
+        document.addEventListener("DOMContentLoaded", function() {
+            initializePlatforms();
+            checkApiStatus();
+            setInterval(checkApiStatus, 30000);
+        });
+    </script>
+</body>
+</html>
